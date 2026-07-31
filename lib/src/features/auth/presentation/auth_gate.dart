@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/state/family_store.dart';
-import '../../shell/presentation/local_family_shell.dart';
+import '../../shell/presentation/connected_family_shell.dart';
 
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
@@ -38,7 +38,10 @@ class _AuthGateState extends State<AuthGate> {
           return AnimatedSwitcher(
             duration: const Duration(milliseconds: 420),
             child: store.signedIn
-                ? const LocalFamilyShell(key: ValueKey<String>('local-app'))
+                ? ConnectedFamilyShell(
+                    key: ValueKey<String>('local-${store.familyName}'),
+                    familyId: store.familyName,
+                  )
                 : const _WelcomeScreen(key: ValueKey<String>('welcome')),
           );
         },
