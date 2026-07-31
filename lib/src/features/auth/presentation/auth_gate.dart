@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/state/family_store.dart';
-import '../../shell/presentation/family_shell.dart';
+import '../../shell/presentation/connected_family_shell.dart';
 
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
@@ -37,7 +37,12 @@ class _AuthGateState extends State<AuthGate> {
           }
           return AnimatedSwitcher(
             duration: const Duration(milliseconds: 420),
-            child: store.signedIn ? const FamilyShell(key: ValueKey<String>('app')) : const _WelcomeScreen(key: ValueKey<String>('welcome')),
+            child: store.signedIn
+                ? ConnectedFamilyShell(
+                    key: ValueKey<String>('local-${store.familyName}'),
+                    familyId: store.familyName,
+                  )
+                : const _WelcomeScreen(key: ValueKey<String>('welcome')),
           );
         },
       ),
@@ -97,10 +102,10 @@ class _WelcomeScreenState extends State<_WelcomeScreen> {
                   FilledButton.icon(
                     onPressed: loading ? null : _continue,
                     icon: loading ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.arrow_forward_rounded),
-                    label: const Padding(padding: EdgeInsets.symmetric(vertical: 15), child: Text('Создать пространство')),
+                    label: const Padding(padding: EdgeInsets.symmetric(vertical: 15), child: Text('Создать бесплатное пространство')),
                   ),
                   const SizedBox(height: 18),
-                  const Row(children: <Widget>[Icon(Icons.lock_outline_rounded, size: 18), SizedBox(width: 8), Expanded(child: Text('Демо-версия хранит данные локально на устройстве.'))]),
+                  const Row(children: <Widget>[Icon(Icons.lock_outline_rounded, size: 18), SizedBox(width: 8), Expanded(child: Text('Записи хранятся локально. Платные сервисы не требуются.'))]),
                 ],
               ),
             ),
