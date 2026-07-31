@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/theme/family_theme.dart';
-import 'features/shell/presentation/family_shell.dart';
+import 'features/auth/presentation/auth_gate.dart';
 
 class FamilyIqApp extends StatelessWidget {
   const FamilyIqApp({super.key});
@@ -14,7 +14,7 @@ class FamilyIqApp extends StatelessWidget {
       theme: FamilyTheme.light,
       darkTheme: FamilyTheme.dark,
       themeMode: ThemeMode.system,
-      home: const FamilyShell(),
+      home: const AuthGate(),
     );
   }
 }
