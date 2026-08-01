@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/state/family_store.dart';
-import '../../shell/presentation/connected_family_shell.dart';
+import '../../shell/presentation/family_iq_24_shell.dart';
 
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
@@ -38,8 +38,8 @@ class _AuthGateState extends State<AuthGate> {
           return AnimatedSwitcher(
             duration: const Duration(milliseconds: 420),
             child: store.signedIn
-                ? ConnectedFamilyShell(
-                    key: ValueKey<String>('local-${store.familyName}'),
+                ? FamilyIq24Shell(
+                    key: ValueKey<String>('familyiq-24-${store.familyName}'),
                     familyId: store.familyName,
                   )
                 : const _WelcomeScreen(key: ValueKey<String>('welcome')),
@@ -93,7 +93,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen> {
                   const SizedBox(height: 28),
                   Text('FamilyIQ', style: Theme.of(context).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -1.8)),
                   const SizedBox(height: 10),
-                  Text('Ваше приватное пространство для семьи, памяти, планов и решений.', style: Theme.of(context).textTheme.titleMedium?.copyWith(height: 1.45)),
+                  Text('Приватная операционная система семьи: память, проекты, календарь, дети и понятные советы.', style: Theme.of(context).textTheme.titleMedium?.copyWith(height: 1.45)),
                   const SizedBox(height: 32),
                   TextField(controller: nameController, textInputAction: TextInputAction.next, decoration: const InputDecoration(labelText: 'Ваше имя', prefixIcon: Icon(Icons.person_outline_rounded))),
                   const SizedBox(height: 14),
