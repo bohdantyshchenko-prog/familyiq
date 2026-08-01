@@ -26,19 +26,21 @@ jobs:
         run: flutter --version
       - name: Resolve dependencies
         run: flutter pub get
-      - name: Normalize formatting for validation
-        run: dart format lib test
+      - name: Verify formatting
+        run: dart format --output=none --set-exit-if-changed lib test
       - name: Static analysis
-        run: flutter analyze --fatal-infos
+        run: flutter analyze --fatal-warnings
       - name: Run tests
         run: flutter test --coverage
+      - name: Verify coverage artifact
+        run: test -s coverage/lcov.info
       - name: Upload coverage
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ github.sha }}
           path: coverage/lcov.info
-          if-no-files-found: ignore
+          if-no-files-found: error
           retention-days: 14
 
   secrets:
