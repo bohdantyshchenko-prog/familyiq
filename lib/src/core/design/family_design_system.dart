@@ -24,7 +24,11 @@ abstract final class FamilyMotion {
 }
 
 class PremiumSurface extends StatelessWidget {
-  const PremiumSurface({required this.child, this.padding = const EdgeInsets.all(20), super.key});
+  const PremiumSurface({
+    required this.child,
+    this.padding = const EdgeInsets.all(20),
+    super.key,
+  });
 
   final Widget child;
   final EdgeInsets padding;
@@ -34,7 +38,12 @@ class PremiumSurface extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: FamilyRadius.card,
-          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: .55)),
+          border: Border.all(
+            color: Theme.of(context)
+                .colorScheme
+                .outlineVariant
+                .withValues(alpha: .55),
+          ),
           boxShadow: <BoxShadow>[
             BoxShadow(
               color: Theme.of(context).shadowColor.withValues(alpha: .08),
@@ -45,9 +54,14 @@ class PremiumSurface extends StatelessWidget {
         ),
         child: Padding(padding: padding, child: child),
       );
+}
 
 class AdaptiveContent extends StatelessWidget {
-  const AdaptiveContent({required this.child, this.maxWidth = 1120, super.key});
+  const AdaptiveContent({
+    required this.child,
+    this.maxWidth = 1120,
+    super.key,
+  });
 
   final Widget child;
   final double maxWidth;
@@ -55,6 +69,9 @@ class AdaptiveContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Align(
         alignment: Alignment.topCenter,
-        child: ConstrainedBox(constraints: BoxConstraints(maxWidth: maxWidth), child: child),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: child,
+        ),
       );
 }
