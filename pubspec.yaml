@@ -1,7 +1,7 @@
 name: familyiq
 description: Privacy-first family intelligence platform.
 publish_to: none
-version: 2.0.0+20
+version: 2.1.0+21
 
 environment:
   sdk: '>=3.4.0 <4.0.0'
