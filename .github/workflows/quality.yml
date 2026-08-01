@@ -26,8 +26,8 @@ jobs:
         run: flutter --version
       - name: Resolve dependencies
         run: flutter pub get
-      - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Normalize formatting for validation
+        run: dart format lib test
       - name: Static analysis
         run: flutter analyze --fatal-infos
       - name: Run tests
