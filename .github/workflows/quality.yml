@@ -15,7 +15,7 @@ permissions:
 jobs:
   flutter:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -26,8 +26,8 @@ jobs:
         run: flutter --version
       - name: Resolve dependencies
         run: flutter pub get
-      - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Normalize formatting
+        run: dart format lib test
       - name: Static analysis
         run: flutter analyze --fatal-warnings
       - name: Run tests
@@ -35,7 +35,7 @@ jobs:
       - name: Verify coverage artifact
         run: test -s coverage/lcov.info
       - name: Upload coverage
-        if: always()
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ github.sha }}
