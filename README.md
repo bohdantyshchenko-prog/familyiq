@@ -1,49 +1,57 @@
-# FamilyIQ 1.3
+# FamilyIQ 4.0
 
-Privacy-first family intelligence platform for shared memory, planning, family projects, explainable AI and a connected Family Graph.
+FamilyIQ is a privacy-first, local-first family life operating system built with Flutter.
 
-## Current release foundation
+The 4.0 release is the definitive offline production baseline. It works without Supabase, OpenAI, paid storage, subscriptions, push providers, or any other external service.
 
-This branch contains an interactive Flutter product foundation representing the planned capabilities from versions 1.0 through 1.3:
+## Product scope
 
-- premium Material 3 application shell;
-- Home and Family Pulse;
-- family timeline and memory cards;
-- Family Brain conversation surface;
+- premium six-tab mobile experience;
+- Home with cinematic family hero and Family Pulse;
+- family history and memory timeline;
+- local calendar and events;
 - Life Projects;
-- Family Graph;
-- Trust Center concepts;
-- family roles and domain models;
+- Family Graph and Trust Center;
+- child records with privacy constraints;
+- explainable offline Family IQ recommendations;
+- seasonal summaries and family storytelling;
+- local creation, reading, deletion, search, and filtering;
+- local backup recovery and JSON archive foundation;
+- Ukrainian, Russian, and English localization foundation;
 - light and dark themes;
-- architecture, security and delivery documentation;
-- initial widget smoke test.
+- responsive phone and wide-screen layouts.
 
-The UI and domain foundation are implemented. Cloud authentication, persistence, media processing, production AI and synchronization are explicitly documented as subsequent integration work and are not presented as complete.
+## Privacy and cost model
 
-## Run locally
+All core data is stored locally on the device. External integrations are optional and disabled when configuration is absent. No API key is required to run the application.
+
+## Run
 
 ```bash
 flutter pub get
 flutter run
 ```
 
-## Quality checks
+## Quality gates
 
 ```bash
-flutter analyze
-flutter test
+dart format lib test
+flutter analyze --fatal-warnings
+flutter test --coverage
 ```
 
-## Documentation
+GitHub Actions also performs secret scanning with Gitleaks.
 
-- [Architecture](docs/ARCHITECTURE.md)
-- [Roadmap 1.0–1.3](docs/ROADMAP_1_0_TO_1_3.md)
+## Release boundary
+
+FamilyIQ 4.0 is the final code baseline for the free local product. App Store and Google Play publication still require owner-controlled platform work: signing identities, bundle identifiers, final icons, screenshots, privacy and support URLs, and physical-device acceptance testing.
 
 ## Product principles
 
-- trust before engagement;
+- privacy before engagement;
+- local operation by default;
 - explainable recommendations;
-- user-controlled data access;
-- open export and deletion;
+- explicit child-data safeguards;
+- user-controlled export and deletion;
 - no covert emotional surveillance;
-- modular architecture and gradual rollout.
+- no false claims about unavailable cloud or AI services.

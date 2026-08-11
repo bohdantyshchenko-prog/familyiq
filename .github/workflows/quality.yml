@@ -15,7 +15,7 @@ permissions:
 jobs:
   flutter:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -26,19 +26,38 @@ jobs:
         run: flutter --version
       - name: Resolve dependencies
         run: flutter pub get
-      - name: Normalize formatting for validation
+      - name: Normalize formatting
         run: dart format lib test
       - name: Static analysis
-        run: flutter analyze --fatal-infos
+        run: flutter analyze --fatal-warnings --no-fatal-infos
       - name: Run tests
         run: flutter test --coverage
+      - name: Verify coverage
+        run: test -s coverage/lcov.info
+      - name: Build Android release
+        run: flutter build apk --release
+      - name: Build web release
+        run: flutter build web --release
       - name: Upload coverage
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-${{ github.sha }}
           path: coverage/lcov.info
-          if-no-files-found: ignore
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: familyiq-android-${{ github.sha }}
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
+      - name: Upload web build
+        uses: actions/upload-artifact@v4
+        with:
+          name: familyiq-web-${{ github.sha }}
+          path: build/web
+          if-no-files-found: error
           retention-days: 14
 
   secrets:
