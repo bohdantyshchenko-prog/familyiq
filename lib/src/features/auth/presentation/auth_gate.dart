@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/state/family_store.dart';
-import '../../shell/presentation/family_iq_world_shell.dart';
+import '../../shell/presentation/production_family_shell.dart';
 
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
@@ -35,10 +35,10 @@ class _AuthGateState extends State<AuthGate> {
               return const Scaffold(body: Center(child: CircularProgressIndicator()));
             }
             return AnimatedSwitcher(
-              duration: const Duration(milliseconds: 420),
+              duration: const Duration(milliseconds: 320),
               child: store.signedIn
-                  ? FamilyIqWorldShell(
-                      key: ValueKey<String>('world-${store.familyName}'),
+                  ? ProductionFamilyShell(
+                      key: ValueKey<String>('family-${store.familyName}'),
                       familyId: store.familyName,
                     )
                   : const _WelcomeScreen(key: ValueKey<String>('welcome')),
@@ -69,7 +69,6 @@ class _WelcomeScreenState extends State<_WelcomeScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: const Color(0xFF070914),
         body: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -79,24 +78,26 @@ class _WelcomeScreenState extends State<_WelcomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    Container(
-                      width: 82,
-                      height: 82,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(colors: <Color>[Color(0xFF9066FF), Color(0xFF5427C8)]),
-                        borderRadius: BorderRadius.circular(28),
-                        boxShadow: const <BoxShadow>[BoxShadow(color: Color(0x775E36D9), blurRadius: 35, offset: Offset(0, 16))],
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        width: 82,
+                        height: 82,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(colors: <Color>[Color(0xFF9066FF), Color(0xFF5427C8)]),
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                        child: const Icon(Icons.family_restroom_rounded, color: Colors.white, size: 40),
                       ),
-                      child: const Icon(Icons.family_restroom_rounded, color: Colors.white, size: 40),
                     ),
                     const SizedBox(height: 30),
-                    const Text('FamilyIQ', style: TextStyle(color: Colors.white, fontSize: 45, fontWeight: FontWeight.w900, letterSpacing: -2)),
+                    Text('FamilyIQ', style: Theme.of(context).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w900, letterSpacing: -2)),
                     const SizedBox(height: 10),
-                    const Text('Приватная операционная система семьи: память, проекты, календарь и понятные советы.', style: TextStyle(color: Colors.white60, fontSize: 17, height: 1.45)),
+                    const Text('Приватная операционная система семьи: память, проекты, календарь и понятные советы.', style: TextStyle(fontSize: 17, height: 1.45)),
                     const SizedBox(height: 32),
-                    TextField(controller: nameController, textInputAction: TextInputAction.next, style: const TextStyle(color: Colors.white), decoration: const InputDecoration(labelText: 'Ваше имя', prefixIcon: Icon(Icons.person_outline_rounded))),
+                    TextField(controller: nameController, textInputAction: TextInputAction.next, decoration: const InputDecoration(labelText: 'Ваше имя', prefixIcon: Icon(Icons.person_outline_rounded))),
                     const SizedBox(height: 14),
-                    TextField(controller: familyController, style: const TextStyle(color: Colors.white), decoration: const InputDecoration(labelText: 'Название семейного пространства', prefixIcon: Icon(Icons.home_outlined))),
+                    TextField(controller: familyController, decoration: const InputDecoration(labelText: 'Название семейного пространства', prefixIcon: Icon(Icons.home_outlined))),
                     const SizedBox(height: 22),
                     FilledButton.icon(
                       onPressed: loading ? null : _continue,
@@ -104,7 +105,7 @@ class _WelcomeScreenState extends State<_WelcomeScreen> {
                       label: const Padding(padding: EdgeInsets.symmetric(vertical: 15), child: Text('Создать бесплатное пространство')),
                     ),
                     const SizedBox(height: 18),
-                    const Row(children: <Widget>[Icon(Icons.lock_outline_rounded, color: Colors.white54, size: 18), SizedBox(width: 8), Expanded(child: Text('Записи хранятся локально. Платные сервисы не требуются.', style: TextStyle(color: Colors.white54)))]),
+                    const Row(children: <Widget>[Icon(Icons.lock_outline_rounded, size: 18), SizedBox(width: 8), Expanded(child: Text('Записи хранятся локально. Платные сервисы не требуются.'))]),
                   ],
                 ),
               ),
@@ -116,6 +117,8 @@ class _WelcomeScreenState extends State<_WelcomeScreen> {
   Future<void> _continue() async {
     setState(() => loading = true);
     await FamilyScope.of(context).signIn(name: nameController.text, family: familyController.text);
-    if (mounted) setState(() => loading = false);
+    if (mounted) {
+      setState(() => loading = false);
+    }
   }
 }
