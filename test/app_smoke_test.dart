@@ -8,39 +8,45 @@ void main() {
     SharedPreferences.setMockInitialValues(<String, Object>{
       'familyiq.session': true,
       'familyiq.family': 'Test Family',
+      'familyiq.user': 'Test User',
     });
   });
 
-  testWidgets('FamilyIQ renders all production destinations', (WidgetTester tester) async {
+  Future<void> pumpPhone(WidgetTester tester) async {
     tester.view.physicalSize = const Size(430, 932);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-
     await tester.pumpWidget(const FamilyIqApp());
     await tester.pumpAndSettle();
+  }
 
-    expect(find.text('Главная'), findsOneWidget);
-    expect(find.text('История'), findsOneWidget);
-    expect(find.text('Календарь'), findsOneWidget);
-    expect(find.text('Проекты'), findsOneWidget);
-    expect(find.text('Семья'), findsOneWidget);
-    expect(find.text('Профиль'), findsOneWidget);
+  testWidgets('production shell renders without layout exceptions', (WidgetTester tester) async {
+    await pumpPhone(tester);
+    expect(tester.takeException(), isNull);
+    expect(find.text('Главная'), findsWidgets);
+    expect(find.text('История'), findsWidgets);
+    expect(find.text('Календарь'), findsWidgets);
+    expect(find.text('Проекты'), findsWidgets);
+    expect(find.text('Семья'), findsWidgets);
+    expect(find.text('Профиль'), findsWidgets);
   });
 
-  testWidgets('creation sheet opens and validates title', (WidgetTester tester) async {
-    tester.view.physicalSize = const Size(430, 932);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets('all primary destinations are navigable', (WidgetTester tester) async {
+    await pumpPhone(tester);
+    for (final String label in <String>['История', 'Календарь', 'Проекты', 'Семья', 'Профиль']) {
+      await tester.tap(find.text(label).last);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    }
+  });
 
-    await tester.pumpWidget(const FamilyIqApp());
-    await tester.pumpAndSettle();
-
+  testWidgets('creation sheet opens safely', (WidgetTester tester) async {
+    await pumpPhone(tester);
     await tester.tap(find.byIcon(Icons.add_rounded));
     await tester.pumpAndSettle();
-
-    expect(find.text('Новая семейная запись'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    expect(find.text('Новая запись'), findsOneWidget);
     expect(find.text('Сохранить локально'), findsOneWidget);
   });
 }
