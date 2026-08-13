@@ -27,6 +27,7 @@ class FamilyStore extends ChangeNotifier {
   bool initialized = false;
   bool signedIn = false;
   bool hasAccount = false;
+  bool pinConfigured = false;
   String userName = '';
   String familyName = '';
   String email = '';
@@ -60,16 +61,23 @@ class FamilyStore extends ChangeNotifier {
     final bool hasLegacyProfile = userName.isNotEmpty || familyName.isNotEmpty || legacySession;
 
     if (hasLegacyProfile && (userId.isEmpty || familyId.isEmpty)) {
-      userId = userId.isEmpty ? _uuid.v4() : userId;
-      familyId = familyId.isEmpty ? _uuid.v4() : familyId;
       userName = userName.isEmpty ? 'Пользователь' : userName;
       familyName = familyName.isEmpty ? 'Моя семья' : familyName;
+      userId = userId.isEmpty ? _uuid.v4() : userId;
+      // Old local records used the visible family name as their familyId.
+      // Reusing it here keeps existing data visible after the account migration.
+      familyId = familyId.isEmpty ? familyName : familyId;
       memberSince ??= DateTime.now().toUtc();
       await _persistProfile(prefs);
     }
 
     hasAccount = userId.isNotEmpty && familyId.isNotEmpty;
     signedIn = hasAccount && legacySession;
+    try {
+      pinConfigured = (await _secureStorage.read(key: _pinKey))?.isNotEmpty ?? false;
+    } catch (_) {
+      pinConfigured = false;
+    }
     initialized = true;
     notifyListeners();
   }
@@ -92,6 +100,12 @@ class FamilyStore extends ChangeNotifier {
     );
     if (validationError != null) return validationError;
 
+    try {
+      await _secureStorage.write(key: _pinKey, value: pin);
+    } catch (_) {
+      return 'secure_storage_failed';
+    }
+
     userName = normalizedName;
     familyName = normalizedFamily;
     email = normalizedEmail;
@@ -100,10 +114,10 @@ class FamilyStore extends ChangeNotifier {
     memberSince = DateTime.now().toUtc();
 
     final SharedPreferences prefs = await _preferences;
-    await _secureStorage.write(key: _pinKey, value: pin);
     await _persistProfile(prefs);
     await prefs.setBool(_sessionKey, true);
     hasAccount = true;
+    pinConfigured = true;
     signedIn = true;
     notifyListeners();
     return null;
@@ -112,23 +126,27 @@ class FamilyStore extends ChangeNotifier {
   Future<String?> signIn({required String emailAddress, required String pin}) async {
     if (!hasAccount) return 'account_not_found';
     final String normalizedEmail = emailAddress.trim().toLowerCase();
-    if (normalizedEmail != email) return 'invalid_credentials';
-    if (!_isValidPin(pin)) return 'invalid_credentials';
+    if (normalizedEmail != email || !_isValidPin(pin)) return 'invalid_credentials';
 
-    final String? storedPin = await _secureStorage.read(key: _pinKey);
-    if (storedPin == null) {
-      return 'pin_not_configured';
+    String? storedPin;
+    try {
+      storedPin = await _secureStorage.read(key: _pinKey);
+    } catch (_) {
+      return 'secure_storage_failed';
     }
+    if (storedPin == null || storedPin.isEmpty) return 'pin_not_configured';
     if (storedPin != pin) return 'invalid_credentials';
 
     final SharedPreferences prefs = await _preferences;
     await prefs.setBool(_sessionKey, true);
+    pinConfigured = true;
     signedIn = true;
     notifyListeners();
     return null;
   }
 
   Future<void> signOut() async {
+    if (!pinConfigured) return;
     final SharedPreferences prefs = await _preferences;
     await prefs.setBool(_sessionKey, false);
     signedIn = false;
@@ -151,10 +169,25 @@ class FamilyStore extends ChangeNotifier {
 
   Future<String?> changePin({required String currentPin, required String newPin}) async {
     if (!_isValidPin(newPin)) return 'invalid_pin';
-    final String? storedPin = await _secureStorage.read(key: _pinKey);
-    if (storedPin == null || storedPin != currentPin) return 'invalid_credentials';
-    if (currentPin == newPin) return 'same_pin';
-    await _secureStorage.write(key: _pinKey, value: newPin);
+    String? storedPin;
+    try {
+      storedPin = await _secureStorage.read(key: _pinKey);
+    } catch (_) {
+      return 'secure_storage_failed';
+    }
+
+    if (storedPin != null && storedPin.isNotEmpty) {
+      if (storedPin != currentPin) return 'invalid_credentials';
+      if (currentPin == newPin) return 'same_pin';
+    }
+
+    try {
+      await _secureStorage.write(key: _pinKey, value: newPin);
+    } catch (_) {
+      return 'secure_storage_failed';
+    }
+    pinConfigured = true;
+    notifyListeners();
     return null;
   }
 
