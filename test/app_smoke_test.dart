@@ -29,16 +29,22 @@ void main() {
     expect(find.text('Календарь'), findsWidgets);
     expect(find.text('Проекты'), findsWidgets);
     expect(find.text('Семья'), findsWidgets);
-    expect(find.text('Профиль'), findsWidgets);
   });
 
-  testWidgets('all primary destinations are navigable', (WidgetTester tester) async {
+  testWidgets('all primary destinations and profile are navigable', (WidgetTester tester) async {
     await pumpPhone(tester);
-    for (final String label in <String>['История', 'Календарь', 'Проекты', 'Семья', 'Профиль']) {
+    for (final String label in <String>['История', 'Календарь', 'Проекты', 'Семья']) {
       await tester.tap(find.text(label).last);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
     }
+
+    expect(find.text('Мой профиль'), findsOneWidget);
+    await tester.tap(find.text('Мой профиль'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('Профиль'), findsOneWidget);
+    expect(find.text('Безопасность'), findsOneWidget);
   });
 
   testWidgets('creation sheet opens safely', (WidgetTester tester) async {
@@ -47,6 +53,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     expect(find.text('Новая запись'), findsOneWidget);
-    expect(find.text('Сохранить локально'), findsOneWidget);
+    expect(find.text('Сохранить'), findsOneWidget);
+    expect(find.text('Память'), findsOneWidget);
+    expect(find.text('Событие'), findsOneWidget);
+    expect(find.text('Проект'), findsOneWidget);
   });
 }
