@@ -6,8 +6,11 @@ import '../../deep_local/application/deep_local_engine.dart';
 import '../../deep_local/domain/deep_local_models.dart';
 
 class LocalFamilyController extends ChangeNotifier {
-  LocalFamilyController({required this.familyId, LocalEntryStore? store, DeepLocalEngine? engine})
-      : _store = store ?? LocalEntryStore(),
+  LocalFamilyController({
+    required this.familyId,
+    LocalEntryStore? store,
+    DeepLocalEngine? engine,
+  })  : _store = store ?? LocalEntryStore(),
         _engine = engine ?? const DeepLocalEngine();
 
   final String familyId;
@@ -16,6 +19,7 @@ class LocalFamilyController extends ChangeNotifier {
   final Uuid _uuid = const Uuid();
 
   bool loading = true;
+  bool writing = false;
   String? errorCode;
   List<LocalEntryRecord> records = <LocalEntryRecord>[];
   String query = '';
@@ -40,11 +44,10 @@ class LocalFamilyController extends ChangeNotifier {
 
   Future<void> initialize() async {
     loading = true;
+    errorCode = null;
     notifyListeners();
     try {
       records = await _store.read(familyId: familyId);
-      if (records.isEmpty) await _seedDemo();
-      errorCode = null;
     } catch (_) {
       errorCode = 'local_load_failed';
     } finally {
@@ -53,36 +56,81 @@ class LocalFamilyController extends ChangeNotifier {
     }
   }
 
-  Future<void> create({
+  Future<String?> create({
     required String type,
     required String title,
     required String note,
+    DateTime? happensAt,
   }) async {
-    final DateTime now = DateTime.now().toUtc();
-    final LocalEntryRecord record = LocalEntryRecord(
-      id: _uuid.v4(),
-      familyId: familyId,
-      type: type,
-      title: title.trim(),
-      note: note.trim(),
-      createdAt: now,
-      updatedAt: now,
-    );
-    await _store.upsert(record);
-    await refresh();
+    if (writing) return 'write_in_progress';
+    writing = true;
+    errorCode = null;
+    notifyListeners();
+    try {
+      final DateTime now = DateTime.now().toUtc();
+      final LocalEntryRecord record = LocalEntryRecord(
+        id: _uuid.v4(),
+        familyId: familyId,
+        type: type,
+        title: title.trim(),
+        note: note.trim(),
+        createdAt: now,
+        updatedAt: now,
+        happensAt: happensAt?.toUtc(),
+      );
+      await _store.upsert(record);
+      records = await _store.read(familyId: familyId);
+      return null;
+    } on LocalStoreException catch (error) {
+      errorCode = error.code;
+      return error.code;
+    } catch (_) {
+      errorCode = 'write_failed';
+      return 'write_failed';
+    } finally {
+      writing = false;
+      notifyListeners();
+    }
   }
 
-  Future<void> delete(String id) async {
-    await _store.softDelete(id: id, familyId: familyId);
-    await refresh();
+  Future<String?> delete(String id) async {
+    if (writing) return 'write_in_progress';
+    writing = true;
+    errorCode = null;
+    notifyListeners();
+    try {
+      await _store.softDelete(id: id, familyId: familyId);
+      records = await _store.read(familyId: familyId);
+      return null;
+    } on LocalStoreException catch (error) {
+      errorCode = error.code;
+      return error.code;
+    } catch (_) {
+      errorCode = 'write_failed';
+      return 'write_failed';
+    } finally {
+      writing = false;
+      notifyListeners();
+    }
   }
 
   Future<void> refresh() async {
-    records = await _store.read(familyId: familyId);
+    try {
+      records = await _store.read(familyId: familyId);
+      errorCode = null;
+    } catch (_) {
+      errorCode = 'local_load_failed';
+    }
     notifyListeners();
   }
 
-  void setSearch({String? value, String? type, int? year, bool clearType = false, bool clearYear = false}) {
+  void setSearch({
+    String? value,
+    String? type,
+    int? year,
+    bool clearType = false,
+    bool clearYear = false,
+  }) {
     if (value != null) query = value;
     if (clearType) {
       selectedType = null;
@@ -97,33 +145,7 @@ class LocalFamilyController extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<LocalEntryRecord> _ofType(String type) =>
-      records.where((LocalEntryRecord item) => item.type == type).toList(growable: false);
-
-  Future<void> _seedDemo() async {
-    final DateTime now = DateTime.now().toUtc();
-    final List<LocalEntryRecord> demo = <LocalEntryRecord>[
-      _record('memory', 'Летняя прогулка', '8 фотографий и короткая заметка.', now.subtract(const Duration(hours: 3))),
-      _record('memory', 'Семейный ужин', 'Спокойный вечер без телефонов.', now.subtract(const Duration(days: 1))),
-      _record('event', 'Вечерняя прогулка', 'Сегодня в 19:30.', now.add(const Duration(hours: 2))),
-      _record('project', 'Дом мечты', 'Следующий шаг: бюджет участка.', now.subtract(const Duration(days: 2))),
-      _record('project', 'Семейная книга', 'Добавить историю родителей.', now.subtract(const Duration(days: 4))),
-      _record('tradition', 'Воскресный завтрак', 'Один общий завтрак каждое воскресенье.', now.subtract(const Duration(days: 8))),
-      _record('child', 'Будущий детский профиль', 'Отдельная приватная зона с родительским контролем.', now.subtract(const Duration(days: 1))),
-    ];
-    for (final LocalEntryRecord item in demo) {
-      await _store.upsert(item);
-    }
-    records = await _store.read(familyId: familyId);
-  }
-
-  LocalEntryRecord _record(String type, String title, String note, DateTime time) => LocalEntryRecord(
-        id: _uuid.v4(),
-        familyId: familyId,
-        type: type,
-        title: title,
-        note: note,
-        createdAt: time,
-        updatedAt: time,
-      );
+  List<LocalEntryRecord> _ofType(String type) => records
+      .where((LocalEntryRecord item) => item.type == type)
+      .toList(growable: false);
 }
