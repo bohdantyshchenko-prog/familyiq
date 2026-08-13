@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,6 +17,7 @@ class FamilyStore extends ChangeNotifier {
   static const String _userIdKey = 'familyiq.user_id';
   static const String _familyIdKey = 'familyiq.family_id';
   static const String _memberSinceKey = 'familyiq.member_since';
+  static const String _pinConfiguredKey = 'familyiq.pin_configured';
   static const String _pinKey = 'familyiq.local_pin';
 
   final SharedPreferences? _providedPreferences;
@@ -56,6 +56,7 @@ class FamilyStore extends ChangeNotifier {
     userId = prefs.getString(_userIdKey)?.trim() ?? '';
     familyId = prefs.getString(_familyIdKey)?.trim() ?? '';
     memberSince = _parseDate(prefs.getString(_memberSinceKey));
+    pinConfigured = prefs.getBool(_pinConfiguredKey) ?? false;
 
     final bool legacySession = prefs.getBool(_sessionKey) ?? false;
     final bool hasLegacyProfile = userName.isNotEmpty || familyName.isNotEmpty || legacySession;
@@ -73,11 +74,6 @@ class FamilyStore extends ChangeNotifier {
 
     hasAccount = userId.isNotEmpty && familyId.isNotEmpty;
     signedIn = hasAccount && legacySession;
-    try {
-      pinConfigured = (await _secureStorage.read(key: _pinKey))?.isNotEmpty ?? false;
-    } catch (_) {
-      pinConfigured = false;
-    }
     initialized = true;
     notifyListeners();
   }
@@ -115,6 +111,7 @@ class FamilyStore extends ChangeNotifier {
 
     final SharedPreferences prefs = await _preferences;
     await _persistProfile(prefs);
+    await prefs.setBool(_pinConfiguredKey, true);
     await prefs.setBool(_sessionKey, true);
     hasAccount = true;
     pinConfigured = true;
@@ -186,6 +183,8 @@ class FamilyStore extends ChangeNotifier {
     } catch (_) {
       return 'secure_storage_failed';
     }
+    final SharedPreferences prefs = await _preferences;
+    await prefs.setBool(_pinConfiguredKey, true);
     pinConfigured = true;
     notifyListeners();
     return null;
